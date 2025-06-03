@@ -11,7 +11,7 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import EditRecipe from './pages/EditRecipe'
 import UserDashboard from './components/UserDashboard'
-
+import RecipeDetail from './components/RecipeDetail'
 
 
 // const getMyRecipes=async()=>{
@@ -29,7 +29,9 @@ const router = createBrowserRouter([
     {path:"/myRecipe", element:<Home/>},
     {path:"/addRecipe", element:<AddFoodRecipe/>},
     {path:"/editRecipe/:id", element:<EditRecipe/>},
-    {path:"/profile", element:<UserDashboard/>}
+    {path:"/profile", element:<UserDashboard/>},
+    {path:"/recipe/:id", element:<RecipeDetail/>}
+
   ]}
 ])
 function App() {

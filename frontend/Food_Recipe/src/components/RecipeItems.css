@@ -1,47 +1,42 @@
-/* RecipeItems.css */
-
 /* Container styling */
 .card-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
   padding: 2rem 4rem;
-  background-color: #e6f6ff;
+  background-color: #f8fbfc;
   box-sizing: border-box;
-  transition: background-color 0.3s ease;
 }
 
-/* Individual card styling */
+/* Card styling */
 .card {
   background-color: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #dceefc;
-  box-shadow: 0 6px 12px rgba(0, 119, 182, 0.1);
+  border-radius: 20px;
+  border: 1px solid #e1ecf4;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 1rem;
-  cursor: pointer;
 }
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0, 119, 182, 0.15);
-}
-.card:focus-within {
-  outline: 2px solid #0077b6;
-  outline-offset: 4px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
 /* Image styling */
 .card img {
-  border-radius: 12px;
+  border-radius: 14px;
   object-fit: cover;
   width: 100%;
-  height: 150px;
+  height: 170px;
   margin-bottom: 1rem;
-  transition: filter 0.3s ease;
+  transition: transform 0.3s ease;
+}
+.card:hover img {
+  transform: scale(1.03);
 }
 
 /* Card body */
@@ -52,83 +47,115 @@
 
 /* Title styling */
 .title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #0077b6;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #005f73;
   margin-bottom: 0.75rem;
-  word-wrap: break-word;
+  text-transform: capitalize;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 0.3s ease;
 }
 
-/* Icon container */
-.icons {
+/* Info row: time + icons */
+.info-row {
   display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  font-size: 1.3rem;
-  transition: color 0.3s ease;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem 1rem;
+  font-size: 1.2rem;
+  gap: 1rem;
+  width: 100%;
 }
 
-/* Stopwatch icon */
-.icons .open {
+/* Time display */
+.open {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-}
-.icons .open:hover {
-  color: #005f8a;
+  color: #333;
+  font-weight: 500;
+  flex-shrink: 0;
 }
 
-/* Heart, edit, delete icons group */
-.icons .like {
+/* Icons container */
+.icons {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
   cursor: pointer;
-  color: #888;
-  transition: color 0.3s ease;
+  flex-shrink: 0;
 }
 
-/* Hover effects and animation for icons */
-.icons .like svg {
-  transition: transform 0.2s, color 0.2s;
-}
-.icons .like svg:hover {
-  transform: scale(1.1);
+/* Individual icon styles */
+.icons > * {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-/* Individual icon colors on hover */
-.icons .like.active svg:first-child {
+/* Hover scale */
+.icons > *:hover {
+  transform: scale(1.15);
+}
+
+/* Heart icon active state */
+.like.active svg {
   color: red;
 }
-.icons .like svg:nth-child(2):hover {
-  color: #0077b6; /* Edit icon */
-}
-.icons .like svg:nth-child(3):hover {
-  color: #e63946; /* Delete icon */
+
+/* Edit icon hover color */
+.icons a svg:hover {
+  color: #0077b6;
 }
 
-/* Responsive Design */
+/* Delete icon hover color */
+.icons svg:nth-child(3):hover {
+  color: #d62828;
+}
+
+/* Make edit and delete keyboard accessible */
+.icons a,
+.icons svg[role="button"] {
+  outline: none;
+}
+.icons a:focus,
+.icons svg[role="button"]:focus {
+  outline: 2px solid #0077b6;
+  outline-offset: 2px;
+}
+
+/* Link styling */
+.card-link {
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .card-container {
     padding: 2rem;
-    gap: 1.2rem;
+    gap: 1.5rem;
   }
 
   .card img {
-    height: 130px;
+    height: 150px;
   }
 
   .title {
-    font-size: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .info-row {
+    font-size: 1.1rem;
+    padding: 0 0.75rem 1rem;
   }
 
   .icons {
-    font-size: 1.5rem;
-    gap: 1.2rem;
+    font-size: 1.2rem;
   }
 }
 
@@ -143,12 +170,16 @@
   }
 
   .card img {
-    height: 120px;
+    height: 130px;
+  }
+
+  .info-row {
+    font-size: 1rem;
+    padding: 0 0.5rem 1rem;
   }
 
   .icons {
-    font-size: 1.5rem;
-    gap: 1rem;
+    font-size: 1.1rem;
+    gap: 0.8rem;
   }
 }
-

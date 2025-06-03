@@ -18,33 +18,53 @@ function RecipeItems() {
 
   // Fetch all recipes
   const getAllRecipes = async () => {
-    const res = await axios.get("http://localhost:5000/recipe");
-    return res.data;
+    try {
+      const res = await axios.get("http://localhost:5000/recipe");
+      // console.log("Fetched from server:", res.data);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      return [];
+    }
   };
 
   // Get only recipes created by current user
- const getMyRecipes = async () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  console.log("Logged in user:", user);
-  if (!user || !user.id) return [];
+  const getMyRecipes = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const userId = user?._id || user?.id;
+    // console.log("Logged in user:", user);
 
-  const data = await getAllRecipes();
-  console.log(data)
-  return data.filter((item) => item.createdBy?.toString() === user.id.toString());
-};
+    if (!userId) return [];
 
+    const data = await getAllRecipes();
+    // console.log("All recipes:", data);
+
+    const filtered = data.filter((item) => {
+      const createdById = item.createdBy?._id || item.createdBy; // supports both object and direct ID
+      // console.log("Recipe:", item.title || item.name, "CreatedBy ID:", createdById, "User ID:", userId);
+      return String(createdById).trim() === String(userId).trim();
+    });
+
+    // console.log("Filtered my recipes:", filtered);
+    return filtered;
+  };
 
   // Load appropriate recipes on mount
   useEffect(() => {
     const fetchData = async () => {
+      // console.log("isFavRecipe:", isFavRecipe, "isMyRecipe:", isMyRecipe);
+
       if (isFavRecipe) {
         const favItems = JSON.parse(localStorage.getItem("fav")) || [];
+        // console.log("Loading favorites:", favItems);
         setAllRecipes(favItems);
       } else if (isMyRecipe) {
+        // console.log("Fetching my recipes...");
         const myRecipes = await getMyRecipes();
-        console.log("Filtered my recipes:", myRecipes);
+        // console.log("Filtered my recipes:", myRecipes);
         setAllRecipes(myRecipes);
       } else {
+        // console.log("Fetching all recipes...");
         const all = await getAllRecipes();
         setAllRecipes(all);
       }
@@ -123,35 +143,58 @@ function RecipeItems() {
             const id = item._id || index;
             return (
               <div key={id} className="card">
-                <img
-                  src={
-                    item.coverImage
-                      ? `http://localhost:5000/images/${item.coverImage}`
-                      : foodImg
-                  }
-                  alt={item.title || "Delicious recipe"}
-                  width="120px"
-                  height="100px"
-                />
-                <div className="card-body">
-                  <div className="title">{item.title}</div>
+                <Link to={`/recipe/${item._id}`} className="card-link">
+                  <img
+                    src={
+                      item.coverImage
+                        ? `http://localhost:5000/images/${item.coverImage}`
+                        : foodImg
+                    }
+                    alt={item.title || "Delicious recipe"}
+                    width="120px"
+                    height="100px"
+                  />
+                  <div className="card-body">
+                    <div className="title">{item.title}</div>
+                  </div>
+                </Link>
+
+                {/* Time and icons in one row */}
+                <div className="info-row">
+                  <div className="open">
+                    <BsFillStopwatchFill />
+                    {item.time}
+                  </div>
                   <div className="icons">
-                    <div className="open">
-                      <BsFillStopwatchFill />
-                      {item.time}
-                    </div>
                     <div
                       className={`like ${favourites.has(id) ? "active" : ""}`}
                       onClick={() => handleFavouriteToggle(item)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleFavouriteToggle(item)
+                      }
+                      aria-label="Toggle favourite"
                     >
                       <FaHeart color={favourites.has(id) ? "red" : "gray"} />
                     </div>
                     {isMyRecipe && (
                       <>
-                        <Link to={`/editRecipe/${item._id}`}>
+                        <Link
+                          to={`/editRecipe/${item._id}`}
+                          aria-label="Edit recipe"
+                        >
                           <FaEdit />
                         </Link>
-                        <MdDeleteForever onClick={() => onDelete(item._id)} />
+                        <MdDeleteForever
+                          onClick={() => onDelete(item._id)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && onDelete(item._id)
+                          }
+                          aria-label="Delete recipe"
+                        />
                       </>
                     )}
                   </div>
