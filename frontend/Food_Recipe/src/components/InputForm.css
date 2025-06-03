@@ -1,0 +1,131 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding: 2rem;
+  border-radius: 20px;
+  background: rgba(10, 169, 227, 0.6); /* Light mode glass */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  color: #070101;
+  text-align: center;
+  margin: auto;
+}
+
+.form h2 {
+  margin: 0;
+  font-size: 2rem;
+  color: #070101;
+  font-weight: 700;
+}
+
+.form-control {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.form-control label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #070101;
+}
+
+.input {
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.721);
+  color: #070101;
+  outline: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.input::placeholder {
+  color: #070101;
+}
+
+.input:focus {
+  background: rgba(255, 255, 255, 0.947);
+  box-shadow: 0 0 0 3px rgba(0, 150, 220, 0.6);
+}
+
+.btn {
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(135deg, #034923, #82ca0d);
+  color: #070101;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 180, 216, 0.5);
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.btn:hover {
+  background: linear-gradient(135deg, #0096c7, #005f7a);
+  box-shadow: 0 10px 20px rgba(0, 150, 199, 0.7);
+  transform: scale(1.05);
+}
+
+.signup-text {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #ccc;
+}
+
+.signup-text a {
+  color: #00b4d8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+}
+
+.para-link {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 480px) {
+  .form {
+    padding: 1.5rem 1rem;
+    max-width: 320px;
+  }
+
+  .form h2 {
+    font-size: 1.6rem;
+  }
+
+  .input {
+    font-size: 0.95rem;
+    padding: 0.65rem 0.9rem;
+  }
+
+  .btn {
+    font-size: 1rem;
+    padding: 0.7rem 1.2rem;
+  }
+
+  .signup-text {
+    font-size: 0.9rem;
+  }
+}
+
