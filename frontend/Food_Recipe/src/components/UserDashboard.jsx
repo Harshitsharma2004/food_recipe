@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from "react";
-import "./UserDashboard.css";
+import "../assets/styles/main.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-
 import { useTheme } from "../ThemeContext";
 
 const UserDashboard = () => {
   const [activeSection, setActiveSection] = useState("profile");
 
-  // Profile state with default values
   const [profile, setProfile] = useState({
     name: "John Doe",
     email: "john@example.com",
   });
 
-  // Load profile from localStorage on component mount
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [errors, setErrors] = useState({});
+
+  const [isLoading, setIsLoading] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
   useEffect(() => {
     const storedProfile = localStorage.getItem("user");
     if (storedProfile) {
@@ -27,130 +36,154 @@ const UserDashboard = () => {
     }
   }, []);
 
-  // Change Password state
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [passwordError, setPasswordError] = useState("");
-  const [passwordSuccess, setPasswordSuccess] = useState("");
-
-  // Theme state
-  const { theme, toggleTheme } = useTheme();
-
-  // Delete Profile confirmation
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  // Profile form handlers
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Save profile and update localStorage
   const handleProfileSave = (e) => {
     e.preventDefault();
     localStorage.setItem("user", JSON.stringify(profile));
-    alert("Profile saved!");
+    toast.success("Profile saved successfully!");
   };
 
-  // Password form handlers
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswordData((prev) => ({ ...prev, [name]: value }));
-  };
 
-  // Logout Functionality
-  let navigate = useNavigate();
-  const handleLogout = (e) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      toast.error("Logged out successfully!");
-      // Redirect or update UI as needed, e.g.:
-      navigate("/");
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+
+    // Validate on input change
+    let errorMsg = "";
+
+    if (!value.trim()) {
+      errorMsg = "This field is required.";
+    } else if (name === "newPassword") {
+      const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9])[\S]{8,}$/;
+      if (!passwordRegex.test(value)) {
+        errorMsg =
+          "Must be 8+ chars, include uppercase, lowercase, special char, and no spaces.";
+      }
+      // Check confirm password match
+      if (
+        passwordData.confirmPassword &&
+        value !== passwordData.confirmPassword
+      ) {
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: "Passwords do not match.",
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+      }
+    } else if (name === "confirmPassword") {
+      if (value !== passwordData.newPassword) {
+        errorMsg = "Passwords do not match.";
+      }
     }
+
+    setErrors((prev) => ({ ...prev, [name]: errorMsg }));
   };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    setPasswordError("");
-    setPasswordSuccess("");
 
-    const { currentPassword, newPassword, confirmPassword } = passwordData;
+    setErrors({});
+    setIsLoading(true);
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError("All fields are required.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError("New passwords don't match.");
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordError("New password must be at least 6 characters.");
+    const currentErrors = {};
+    if (!passwordData.currentPassword.trim())
+      currentErrors.currentPassword = "Current password is required.";
+    if (!passwordData.newPassword.trim())
+      currentErrors.newPassword = "New password is required.";
+    if (!passwordData.confirmPassword.trim())
+      currentErrors.confirmPassword = "Please confirm your new password.";
+
+    if (
+      passwordData.newPassword &&
+      passwordData.confirmPassword &&
+      passwordData.newPassword !== passwordData.confirmPassword
+    )
+      currentErrors.confirmPassword = "Passwords do not match.";
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9])[\S]{8,}$/;
+    if (
+      passwordData.newPassword &&
+      !passwordRegex.test(passwordData.newPassword)
+    )
+      currentErrors.newPassword =
+        "Must be 8+ chars, include uppercase, lowercase, special char, and no spaces.";
+
+    if (Object.keys(currentErrors).length > 0) {
+      setErrors(currentErrors);
+      setIsLoading(false);
+      Object.values(currentErrors).forEach((msg) => {
+        if (msg) toast.error(msg);
+      });
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(
-        "http://localhost:5000/change-password", // <-- Fixed endpoint
-        { currentPassword, newPassword },
+
+      await axios.post(
+        "http://localhost:5000/change-password",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      setPasswordSuccess(res.data.message || "Password changed successfully!");
+      toast.success("Password updated successfully. Please login again.", {
+        onClose: () => window.location.reload(),
+      });
+
+      localStorage.removeItem("token");
+      navigate("/");
+
       setPasswordData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
+      setErrors({});
     } catch (error) {
-      console.error(error);
-      setPasswordError(
-        error.response?.data?.message || "Failed to change password"
-      );
+      const data = error.response?.data;
+
+      if (data?.errors) {
+        setErrors(data.errors);
+        Object.values(data.errors).forEach((msg) => {
+          if (msg) toast.error(msg);
+        });
+      } else if (data?.message) {
+        toast.success(data.message);
+      } else {
+        toast.error("Failed to change password");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Delete profile handler
-  // Handle delete
-  const handleDeleteProfile = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const password = passwordData.currentPassword;
-
-    if (!user || !user.id || !password) {
-      toast.error("Please enter your password to confirm.");
-      return;
-    }
-
-    try {
-      const response = await axios.delete(
-        `http://localhost:5000/profile/${user.id}`,
-        {
-          data: { password }, // Required for DELETE with body
-        }
-      );
-
-      toast.success(response.data.message || "User deleted.");
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      window.location.href = "/";
-    } catch (err) {
-      console.error("Delete error:", err.response?.data || err);
-      toast.error(err.response?.data?.message || "Failed to delete account.");
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    toast.error("Logged out successfully!", {
+      onClose: () => window.location.reload(),
+    });
+    navigate("/");
   };
 
-  // Content render
+  // Render content based on selected tab
   const renderContent = () => {
+    const haserrors = Object.values(errors).some((msg) => msg);
+    const isFormIncomplete =
+      !passwordData.currentPassword.trim() ||
+      !passwordData.newPassword.trim() ||
+      !passwordData.confirmPassword.trim();
     switch (activeSection) {
       case "profile":
         return (
@@ -161,7 +194,7 @@ const UserDashboard = () => {
                 <input
                   type="text"
                   name="name"
-                  value={profile.username}
+                  value={profile.name}
                   onChange={handleProfileChange}
                   readOnly
                 />
@@ -176,9 +209,6 @@ const UserDashboard = () => {
                   readOnly
                 />
               </label>
-              {/* <button type="submit" className="btn-primary">
-                Save Profile
-              </button> */}
             </form>
             <button
               onClick={handleLogout}
@@ -193,6 +223,16 @@ const UserDashboard = () => {
       case "changePassword":
         return (
           <form onSubmit={handlePasswordSubmit}>
+            {/* General error message if exists */}
+            {errors.general && (
+              <div
+                className="error-text general-error"
+                style={{ marginBottom: "1rem" }}
+              >
+                {errors.general}
+              </div>
+            )}
+
             <label>
               Current Password:
               <input
@@ -200,9 +240,14 @@ const UserDashboard = () => {
                 name="currentPassword"
                 value={passwordData.currentPassword}
                 onChange={handlePasswordChange}
+                className={errors.currentPassword ? "input-error" : ""}
                 required
               />
+              {errors.currentPassword && (
+                <small className="error-text">{errors.currentPassword}</small>
+              )}
             </label>
+
             <label>
               New Password:
               <input
@@ -210,9 +255,14 @@ const UserDashboard = () => {
                 name="newPassword"
                 value={passwordData.newPassword}
                 onChange={handlePasswordChange}
+                className={errors.newPassword ? "input-error" : ""}
                 required
               />
+              {errors.newPassword && (
+                <small className="error-text">{errors.newPassword}</small>
+              )}
             </label>
+
             <label>
               Confirm New Password:
               <input
@@ -220,25 +270,40 @@ const UserDashboard = () => {
                 name="confirmPassword"
                 value={passwordData.confirmPassword}
                 onChange={handlePasswordChange}
+                className={errors.confirmPassword ? "input-error" : ""}
                 required
               />
+              {errors.confirmPassword && (
+                <small className="error-text">{errors.confirmPassword}</small>
+              )}
             </label>
-            {passwordError && <p className="error">{passwordError}</p>}
-            {passwordSuccess && <p className="success">{passwordSuccess}</p>}
-            <button type="submit" className="btn-primary">
-              Change Password
+
+            <button
+              type="submit"
+              disabled={isLoading || haserrors || isFormIncomplete}
+              className="btn-primary"
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner" aria-label="Loading"></span> Please
+                  wait...
+                </>
+              ) : (
+                "Change Password"
+              )}
             </button>
           </form>
         );
 
       case "theme":
         return (
-          <div>
+          <div className="theme-toggle">
             <p>
-              Current theme: <b>{theme}</b>
+              Current theme:{" "}
+              <b>{theme.charAt(0).toUpperCase() + theme.slice(1)}</b>
             </p>
             <button onClick={toggleTheme} className="btn-primary">
-              Toggle to {theme === "light" ? "Dark" : "Light"} Mode
+              Switch to {theme === "light" ? "Dark" : "Light"} Mode
             </button>
           </div>
         );
@@ -250,116 +315,12 @@ const UserDashboard = () => {
           >
             <h1>Privacy Policy For "Plated Poetry"</h1>
             <p>
-              <strong>Effective Date:</strong> June 03,2025
+              <strong>Effective Date:</strong> June 03, 2025
             </p>
-
             <p>
               At <strong>Plated Poetry</strong>, one of our main priorities is
-              the privacy of our visitors. This Privacy Policy document outlines
-              the types of information that are collected and recorded by{" "}
-              <strong>Plated Poetry</strong> and how we use it.
+              the privacy of our visitors...
             </p>
-
-            <h2>1. Information We Collect</h2>
-            <p>We may collect personal information from you when you:</p>
-            <ul>
-              <li>Register on our website</li>
-              <li>Subscribe to our newsletter</li>
-              <li>Comment on recipes or blog posts</li>
-              <li>Contact us via forms or email</li>
-            </ul>
-
-            <p>The personal information collected may include:</p>
-            <ul>
-              <li>Name</li>
-              <li>Email address</li>
-              <li>IP address</li>
-              <li>Any other information you voluntarily provide</li>
-            </ul>
-
-            <p>We also collect non-personally identifiable data such as:</p>
-            <ul>
-              <li>Browser type</li>
-              <li>Operating system</li>
-              <li>Pages visited</li>
-              <li>Time and date of visit</li>
-            </ul>
-
-            <h2>2. How We Use Your Information</h2>
-            <ul>
-              <li>To provide, operate, and maintain our website</li>
-              <li>To personalize your experience on our website</li>
-              <li>To improve our website’s functionality and content</li>
-              <li>To send you newsletters or updates if you opt-in</li>
-              <li>To respond to inquiries and provide support</li>
-              <li>To monitor and analyze trends and usage</li>
-            </ul>
-
-            <h2>3. Cookies</h2>
-            <p>
-              <strong>Your Website Name</strong> uses cookies to:
-            </p>
-            <ul>
-              <li>Store user preferences</li>
-              <li>Analyze traffic and user behavior</li>
-              <li>Improve site performance and usability</li>
-            </ul>
-            <p>
-              You can choose to disable cookies through your browser settings.
-              Note that disabling cookies may affect how you interact with our
-              website.
-            </p>
-
-            <h2>4. Third-Party Services</h2>
-            <p>
-              We may use third-party services such as Google Analytics or
-              advertising networks. These services may use cookies and collect
-              data in accordance with their own privacy policies.
-            </p>
-            <p>
-              We are not responsible for the privacy practices of third-party
-              websites or services.
-            </p>
-
-            <h2>5. Data Security</h2>
-            <p>
-              We take reasonable steps to protect your personal information from
-              unauthorized access, disclosure, or destruction. However, no
-              method of transmission over the internet is 100% secure.
-            </p>
-
-            <h2>6. Children’s Privacy</h2>
-            <p>
-              Our website is not intended for children under the age of 13. We
-              do not knowingly collect personal information from children.
-            </p>
-
-            <h2>7. Your Consent</h2>
-            <p>
-              By using our website, you hereby consent to our Privacy Policy and
-              agree to its terms.
-            </p>
-
-            <h2>8. Changes to This Privacy Policy</h2>
-            <p>
-              We may update our Privacy Policy from time to time. Any changes
-              will be posted on this page with an updated “Effective Date.”
-            </p>
-
-            {/* <h2>9. Contact Us</h2>
-            <p>
-              If you have any questions about this Privacy Policy, you can
-              contact us at:
-            </p> */}
-            {/* <p>
-              <strong>Your Website Name</strong>
-              <br />
-              Email:{" "}
-              <a href="mailto:yourcontactemail@example.com">
-                yourcontactemail@example.com
-              </a>
-              <br />
-            </p> */}
           </div>
         );
 
@@ -382,7 +343,12 @@ const UserDashboard = () => {
               }
               required
             />
-            <button onClick={handleDeleteProfile} className="btn-danger">
+            <button
+              className="btn-danger"
+              onClick={() => {
+                /* Your delete logic here */
+              }}
+            >
               Delete Profile
             </button>
           </div>
@@ -395,7 +361,6 @@ const UserDashboard = () => {
 
   return (
     <div className={`dashboard ${theme === "dark" ? "dark-theme" : ""}`}>
-      {/* Sidebar */}
       <div className="sidebar">
         <h2 className="sidebar-title">Dashboard</h2>
         <ul className="nav-list">
@@ -434,7 +399,6 @@ const UserDashboard = () => {
         </ul>
       </div>
 
-      {/* Main Content */}
       <div className="content">
         <h1 className="section-title">
           {activeSection.replace(/([A-Z])/g, " $1")}

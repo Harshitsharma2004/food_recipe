@@ -1,8 +1,7 @@
 import React from "react";
 import foodBanner from "../assets/food-banner.jpg";
-import "./Home.css";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+// import "./Home.css";
+import '../assets/styles/main.css'
 import RecipeItems from "../components/RecipeItems";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -54,7 +53,7 @@ function Home() {
           <InputForm setIsOpen={setIsOpen} />
         </Modal>
       )}
-      <div className="recipes">
+      <div className="home-recipes">
         <RecipeItems/>
       </div>
     </>

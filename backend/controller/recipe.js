@@ -36,30 +36,31 @@ const getRecipe = async (req, res) => {
 
 //Add new recipe
 const addRecipe = async (req, res) => {
-    try {
-        const { title, ingredients, instructions, time } = req.body;
+  try {
+    const { title, ingredients, instructions, time } = req.body;
 
-        // Validation
-        if (!title || !ingredients || !instructions) {
-            return res.status(400).json({ message: "Required fields can't be empty" });
-        }
-
-        // Create new recipe
-        const newRecipe = await Recipes.create({
-            title,
-            ingredients,
-            instructions,
-            time,
-            coverImage:req.file.filename,
-            createdBy:req.user.id
-        });
-
-        return res.status(201).json(newRecipe);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Something went wrong while adding the recipe." });
+    if (!title || !ingredients || !instructions) {
+      return res.status(400).json({ message: "Required fields can't be empty" });
     }
+
+    const ingredientsArray = ingredients.split(',').map(i => i.trim());
+
+    const newRecipe = await Recipes.create({
+      title,
+      ingredients: ingredientsArray,
+      instructions,
+      time,
+      coverImage: req.file?.filename || null,
+      createdBy: req.user.id
+    });
+
+    return res.status(201).json(newRecipe);
+  } catch (error) {
+    console.error("Error in addRecipe:", error);
+    return res.status(500).json({ message: "Something went wrong while adding the recipe." });
+  }
 };
+
 
 // Edit an recipe
 const editRecipe = async (req, res) => {

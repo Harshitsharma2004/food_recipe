@@ -3,7 +3,9 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import foodImg from "../assets/food-banner.jpg";
 import { format } from "date-fns";
-import "./RecipeDetail.css";
+// import "./RecipeDetail.css";
+import '../assets/styles/main.css'
+
 
 function RecipeDetail() {
   const { id } = useParams();

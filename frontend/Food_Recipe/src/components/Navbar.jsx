@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./Navbar.css";
+// import "./Navbar.css";
+import '../assets/styles/main.css'
+
 import Modal from "./Modal";
 import InputForm from "./InputForm";
 import { NavLink, useNavigate } from "react-router-dom";
