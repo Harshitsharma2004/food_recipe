@@ -79,7 +79,9 @@ const userLogin = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        isDark: user.isDark,
+        isDeleted: user.isDeleted,
       }
     });
 
@@ -142,22 +144,14 @@ const changePassword = async (req, res) => {
 
 const updateTheme = async (req, res) => {
   try {
-    const userId = req.user.id; 
-    const { isDark } = req.body;
+    const userId = req.user.id;
 
-    if (typeof isDark !== "boolean") {
-      return res.status(400).json({ error: "isDark must be a boolean." });
-    }
 
-    const user = await User.findOneAndUpdate(
-      { _id: userId, isDeleted: false },
-      { isDark },
-      { new: true }
-    );
+    const user = await User.findById(userId)
+    if (!user) return res.status(404).json({ error: "User not found or deleted." });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found or deleted." });
-    }
+    user.isDark = !user.isDark
+    await user.save()
 
     return res.status(200).json({
       message: "Theme updated successfully.",
@@ -169,24 +163,6 @@ const updateTheme = async (req, res) => {
   }
 };
 
-const getTheme = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const user = await User.findOne({ _id: userId, isDeleted: false });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found or deleted." });
-    }
-
-    return res.status(200).json({
-      theme: user.isDark ? "dark" : "light"
-    });
-  } catch (error) {
-    console.error("Get Theme Error:", error);
-    return res.status(500).json({ error: "Internal server error." });
-  }
-};
 
 
-module.exports = { userSignUp, userLogin, getUser, changePassword, updateTheme, getTheme };
+module.exports = { userSignUp, userLogin, getUser, changePassword, updateTheme };

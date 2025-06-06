@@ -5,7 +5,7 @@ import { FaHeart, FaEdit } from "react-icons/fa";
 import { BsFillStopwatchFill } from "react-icons/bs";
 import { MdDeleteForever } from "react-icons/md";
 // import "./RecipeItems.css";
-import '../assets/styles/main.css'
+// import '../assets/styles/main.css'
 
 import axios from "axios";
 

@@ -1,6 +1,6 @@
 import React from 'react';
 // import './Modal.css';
-import '../assets/styles/main.css'
+// import '../assets/styles/main.css'
 
 
 function Modal({ children, onClose }) {

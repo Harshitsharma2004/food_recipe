@@ -4,7 +4,7 @@ import axios from "axios";
 import foodImg from "../assets/food-banner.jpg";
 import { format } from "date-fns";
 // import "./RecipeDetail.css";
-import '../assets/styles/main.css'
+// import '../assets/styles/main.css'
 
 
 function RecipeDetail() {

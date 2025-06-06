@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 // import './AddFoodRecipe.css';
-import '../assets/styles/main.css'
 
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';

@@ -1,7 +1,6 @@
 import React from "react";
 import foodBanner from "../assets/food-banner.jpg";
 // import "./Home.css";
-import '../assets/styles/main.css'
 import RecipeItems from "../components/RecipeItems";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -20,7 +19,7 @@ function Home() {
   }
   return (
     <>
-      <section className="home">
+      <div className="home">
         <div className="left">
           <h1>Food Recipe</h1>
           <h5>
@@ -38,7 +37,7 @@ function Home() {
             height={"300px"}
           />
         </div>
-      </section>
+      </div>
       <div className="bg">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
           <path

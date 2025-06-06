@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 // import "./Navbar.css";
-import '../assets/styles/main.css'
-
+// import "../assets/styles/main.css";
+import ThemeToggle from "./ThemeToggle";
 import Modal from "./Modal";
 import InputForm from "./InputForm";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -109,7 +109,11 @@ function Navbar() {
           </li>
           <li>
             {isLogin ? (
-              <NavLink to="/profile" onClick={() => setMenuOpen(false)} className="profile-icon">
+              <NavLink
+                to="/profile"
+                onClick={() => setMenuOpen(false)}
+                className="profile-icon"
+              >
                 <CgProfile />
               </NavLink>
             ) : (
@@ -117,6 +121,9 @@ function Navbar() {
                 Login
               </button>
             )}
+          </li>
+          <li>
+            <ThemeToggle />
           </li>
         </ul>
       </header>

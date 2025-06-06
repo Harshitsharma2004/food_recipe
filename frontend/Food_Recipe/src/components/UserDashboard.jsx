@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import "../assets/styles/main.css";
+// import "../assets/styles/main.css";
+// import '../assets/styles/dark.css'
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../ThemeContext";
+// import { useTheme } from "../ThemeContext";
+// import ThemeToggle from "./ThemeToggle";
 
 const UserDashboard = () => {
   const [activeSection, setActiveSection] = useState("profile");
@@ -22,7 +24,7 @@ const UserDashboard = () => {
   const [errors, setErrors] = useState({});
 
   const [isLoading, setIsLoading] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  // const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -194,7 +196,7 @@ const UserDashboard = () => {
                 <input
                   type="text"
                   name="name"
-                  value={profile.name}
+                  value={profile.username}
                   onChange={handleProfileChange}
                   readOnly
                 />
@@ -294,21 +296,8 @@ const UserDashboard = () => {
             </button>
           </form>
         );
-
-      case "theme":
-        return (
-          <div className="theme-toggle">
-            <p>
-              Current theme:{" "}
-              <b>{theme.charAt(0).toUpperCase() + theme.slice(1)}</b>
-            </p>
-            <button onClick={toggleTheme} className="btn-primary">
-              Switch to {theme === "light" ? "Dark" : "Light"} Mode
-            </button>
-          </div>
-        );
-
-      case "privacyPolicy":
+        
+        case "privacyPolicy":
         return (
           <div
             style={{ maxHeight: "auto", overflowY: "auto", padding: "1rem" }}
@@ -360,7 +349,7 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className={`dashboard ${theme === "dark" ? "dark-theme" : ""}`}>
+    <div className="dashboard">
       <div className="sidebar">
         <h2 className="sidebar-title">Dashboard</h2>
         <ul className="nav-list">
@@ -375,12 +364,6 @@ const UserDashboard = () => {
             onClick={() => setActiveSection("changePassword")}
           >
             Change Password
-          </li>
-          <li
-            className={activeSection === "theme" ? "active" : ""}
-            onClick={() => setActiveSection("theme")}
-          >
-            Theme
           </li>
           <li
             className={activeSection === "privacyPolicy" ? "active" : ""}
