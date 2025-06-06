@@ -4,25 +4,24 @@ import foodImg from "../assets/food-banner.jpg";
 import { FaHeart, FaEdit } from "react-icons/fa";
 import { BsFillStopwatchFill } from "react-icons/bs";
 import { MdDeleteForever } from "react-icons/md";
-// import "./RecipeItems.css";
-// import '../assets/styles/main.css'
-
 import axios from "axios";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 function RecipeItems() {
   const recipes = useLoaderData();
   const [allRecipes, setAllRecipes] = useState([]);
   const [favourites, setFavourites] = useState(new Set());
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+
   const pathname = window.location.pathname;
   const isMyRecipe = pathname === "/myRecipe";
   const isFavRecipe = pathname === "/favRecipe";
 
-  // Fetch all recipes
   const getAllRecipes = async () => {
     try {
       const res = await axios.get("http://localhost:5000/recipe");
-      // console.log("Fetched from server:", res.data);
       return res.data;
     } catch (error) {
       console.error("Error fetching recipes:", error);
@@ -30,59 +29,48 @@ function RecipeItems() {
     }
   };
 
-  // Get only recipes created by current user
   const getMyRecipes = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?._id || user?.id;
-    // console.log("Logged in user:", user);
-
     if (!userId) return [];
 
     const data = await getAllRecipes();
-    // console.log("All recipes:", data);
-
     const filtered = data.filter((item) => {
-      const createdById = item.createdBy?._id || item.createdBy; // supports both object and direct ID
-      // console.log("Recipe:", item.title || item.name, "CreatedBy ID:", createdById, "User ID:", userId);
+      const createdById = item.createdBy?._id || item.createdBy;
       return String(createdById).trim() === String(userId).trim();
     });
 
-    // console.log("Filtered my recipes:", filtered);
     return filtered;
   };
 
-  // Load appropriate recipes on mount
   useEffect(() => {
     const fetchData = async () => {
-      // console.log("isFavRecipe:", isFavRecipe, "isMyRecipe:", isMyRecipe);
-
       if (isFavRecipe) {
         const favItems = JSON.parse(localStorage.getItem("fav")) || [];
-        // console.log("Loading favorites:", favItems);
         setAllRecipes(favItems);
       } else if (isMyRecipe) {
-        // console.log("Fetching my recipes...");
         const myRecipes = await getMyRecipes();
-        // console.log("Filtered my recipes:", myRecipes);
         setAllRecipes(myRecipes);
       } else {
-        // console.log("Fetching all recipes...");
         const all = await getAllRecipes();
         setAllRecipes(all);
       }
+      setCurrentPage(1); // reset to first page
     };
 
     fetchData();
   }, [isFavRecipe, isMyRecipe]);
 
-  // Sync favourites from localStorage on mount
   useEffect(() => {
     const favItems = JSON.parse(localStorage.getItem("fav")) || [];
     const favIds = new Set(favItems.map((item) => item._id));
     setFavourites(favIds);
   }, []);
 
-  // Handle favourite toggle
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
+
   const handleFavouriteToggle = (item) => {
     const id = item._id;
     const newFavourites = new Set(favourites);
@@ -100,10 +88,9 @@ function RecipeItems() {
 
     setFavourites(newFavourites);
     localStorage.setItem("fav", JSON.stringify(favItems));
-    if (isFavRecipe) setAllRecipes(favItems); // Live update for /favRecipe
+    if (isFavRecipe) setAllRecipes(favItems);
   };
 
-  // Handle delete
   const onDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this recipe?")) return;
 
@@ -111,7 +98,6 @@ function RecipeItems() {
       await axios.delete(`http://localhost:5000/recipe/${id}`);
       setAllRecipes((prev) => prev.filter((recipe) => recipe._id !== id));
 
-      // Also remove from favourites if exists
       const favItems = JSON.parse(localStorage.getItem("fav")) || [];
       const updatedFavs = favItems.filter((r) => r._id !== id);
       localStorage.setItem("fav", JSON.stringify(updatedFavs));
@@ -127,6 +113,12 @@ function RecipeItems() {
     }
   };
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = allRecipes.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(allRecipes.length / itemsPerPage);
+
   return (
     <>
       {allRecipes?.length === 0 ? (
@@ -140,71 +132,138 @@ function RecipeItems() {
             : "No recipes found."}
         </p>
       ) : (
-        <div className="card-container">
-          {allRecipes.map((item, index) => {
-            const id = item._id || index;
-            return (
-              <div key={id} className="card">
-                <Link to={`/recipe/${item._id}`} className="card-link">
-                  <img
-                    src={
-                      item.coverImage
-                        ? `http://localhost:5000/images/${item.coverImage}`
-                        : foodImg
-                    }
-                    alt={item.title || "Delicious recipe"}
-                    width="120px"
-                    height="100px"
-                  />
-                  <div className="card-body">
-                    <div className="title">{item.title}</div>
-                  </div>
-                </Link>
-
-                {/* Time and icons in one row */}
-                <div className="info-row">
-                  <div className="open">
-                    <BsFillStopwatchFill />
-                    {item.time}
-                  </div>
-                  <div className="icons">
-                    <div
-                      className={`like ${favourites.has(id) ? "active" : ""}`}
-                      onClick={() => handleFavouriteToggle(item)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && handleFavouriteToggle(item)
+        <>
+          <div className="card-container">
+            {currentItems.map((item, index) => {
+              const id = item._id || index;
+              return (
+                <div key={id} className="card">
+                  <Link to={`/recipe/${item._id}`} className="card-link">
+                    <img
+                      src={
+                        item.coverImage
+                          ? `http://localhost:5000/images/${item.coverImage}`
+                          : foodImg
                       }
-                      aria-label="Toggle favourite"
-                    >
-                      <FaHeart color={favourites.has(id) ? "red" : "gray"} />
+                      alt={item.title || "Delicious recipe"}
+                      width="120px"
+                      height="100px"
+                    />
+                    <div className="card-body">
+                      <div className="title">{item.title}</div>
                     </div>
-                    {isMyRecipe && (
-                      <>
-                        <Link
-                          to={`/editRecipe/${item._id}`}
-                          aria-label="Edit recipe"
-                        >
-                          <FaEdit />
-                        </Link>
-                        <MdDeleteForever
-                          onClick={() => onDelete(item._id)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && onDelete(item._id)
-                          }
-                          aria-label="Delete recipe"
-                        />
-                      </>
-                    )}
+                  </Link>
+
+                  <div className="info-row">
+                    <div className="open">
+                      <BsFillStopwatchFill />
+                      {item.time}
+                    </div>
+                    <div className="icons">
+                      <div
+                        className={`like ${favourites.has(id) ? "active" : ""}`}
+                        onClick={() => handleFavouriteToggle(item)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleFavouriteToggle(item)
+                        }
+                        aria-label="Toggle favourite"
+                      >
+                        <FaHeart color={favourites.has(id) ? "red" : "gray"} />
+                      </div>
+                      {isMyRecipe && (
+                        <>
+                          <Link
+                            to={`/editRecipe/${item._id}`}
+                            aria-label="Edit recipe"
+                          >
+                            <FaEdit />
+                          </Link>
+                          <MdDeleteForever
+                            onClick={() => onDelete(item._id)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && onDelete(item._id)
+                            }
+                            aria-label="Delete recipe"
+                          />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <div
+              className="pagination-controls"
+              style={{ textAlign: "center", marginTop: "1.5rem" }}
+            >
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{
+                  margin: "0 5px",
+                  padding: "8px 12px",
+                  backgroundColor: "#f0f0f0",
+                  color: "black",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  opacity: currentPage === 1 ? 0.5 : 1,
+                }}
+              >
+                <FaArrowLeft />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`pagination-btn ${
+                    currentPage === i + 1 ? "active" : ""
+                  }`}
+                  style={{
+                    margin: "0 5px",
+                    padding: "8px 12px",
+                    backgroundColor:
+                      currentPage === i + 1 ? "#007bff" : "#f0f0f0",
+                    color: currentPage === i + 1 ? "white" : "black",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                style={{
+                  margin: "0 5px",
+                  padding: "8px 12px",
+                  backgroundColor: "#f0f0f0",
+                  color: "black",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor:
+                    currentPage === totalPages ? "not-allowed" : "pointer",
+                  opacity: currentPage === totalPages ? 0.5 : 1,
+                }}
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+          )}
+        </>
       )}
     </>
   );

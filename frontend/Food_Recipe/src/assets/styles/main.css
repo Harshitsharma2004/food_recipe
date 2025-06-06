@@ -1171,3 +1171,18 @@ button {
     padding: 12px 0;
   }
 }
+
+
+/* pagination icons css  */
+
+.pagination-controls button {
+  margin: 0 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.pagination-controls .active {
+  background-color: #007bff;
+  color: white;
+}
